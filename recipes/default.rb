@@ -21,19 +21,29 @@ include_recipe "java"
 
 package "unzip"
 
-remote_file "/opt/sonar-#{node['sonar']['version']}.zip" do
-  source "#{node['sonar']['mirror']}/sonar-#{node['sonar']['version']}.zip"
+remote_file "/opt/#{node['sonar']['productname']}-#{node['sonar']['version']}.zip" do
+  source "#{node['sonar']['mirror']}/#{node['sonar']['productname']}-#{node['sonar']['version']}.zip"
   mode "0644"
   checksum "#{node['sonar']['checksum']}"
-  not_if { ::File.exists?("/opt/sonar-#{node['sonar']['version']}.zip") }
+  not_if { ::File.exists?("/opt/#{node['sonar']['productname']}-#{node['sonar']['version']}.zip") }
 end
 
-execute "unzip /opt/sonar-#{node['sonar']['version']}.zip -d /opt/" do
-  not_if { ::File.directory?("/opt/sonar-#{node['sonar']['version']}/") }
+execute "unzip /opt/#{node['sonar']['productname']}-#{node['sonar']['version']}.zip -d /opt/" do
+  not_if { ::File.directory?("/opt/#{node['sonar']['productname']}-#{node['sonar']['version']}/") }
 end
 
 link "/opt/sonar" do
-  to "/opt/sonar-#{node['sonar']['version']}"
+  to "/opt/#{node['sonar']['productname']}-#{node['sonar']['version']}"
+end
+
+link '/usr/bin/sonar' do
+  to "/opt/sonar/bin/#{node['sonar']['os_kernel']}/sonar.sh"
+end
+
+cookbook_file 'sonar_initd' do
+  path '/etc/init.d/sonar'
+  mode 00755
+  action :create
 end
 
 service "sonar" do
